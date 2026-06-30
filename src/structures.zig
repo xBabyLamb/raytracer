@@ -1,4 +1,5 @@
 const std = @import("std");
+const assert = std.debug.assert;
 
 pub const vector = struct {
     elements: [3]f64 = .{ 0, 0, 0 },
@@ -97,6 +98,13 @@ pub const point = struct {
     }
 
     //TODO:add helper functions
+    pub fn substraction_operation(self: *const point, subtrahend: *const point) point {
+        return point{ .elements = .{
+            self.x() - subtrahend.x(),
+            self.y() - subtrahend.y(),
+            self.z() - subtrahend.z(),
+        } };
+    }
 
     pub fn print(self: *const point) void {
         std.debug.print("The current point:{any}\n", .{self.elements});
@@ -166,7 +174,6 @@ pub const color = struct {
 pub const ray = struct {
     origin: point = undefined,
     direction: vector = undefined,
-    // color: color = .{ .elements = .{ 0, 0, 0 } },
 
     pub fn point_at(self: *const ray, time: f64) point {
         const scaled_direction = self.direction.scale_operation(time);
@@ -192,20 +199,21 @@ pub const ray = struct {
     }
 };
 
-//FIXME:add better to way handle this two operations
+//Helper functions to calculate raytracer_config fields
 fn calculate_viewport_upper_left(camera_center: *const point, focal_vector: *const vector, viewport_u: *const vector, viewport_v: *const vector) vector {
+    const scaled_u = viewport_u.scale_operation(1.0 / 2.0);
+    const scaled_v = viewport_v.scale_operation(1.0 / 2.0);
+    const updated_focal_vector = focal_vector.inverse_operation().substraction_operation(&scaled_u).substraction_operation(&scaled_v);
     return vector{ .elements = .{
-        camera_center.x() - focal_vector.x() - (viewport_u.x() / 2) - (viewport_v.x() / 2),
-        camera_center.y() - focal_vector.y() - (viewport_u.y() / 2) - (viewport_v.y() / 2),
-        camera_center.z() - focal_vector.z() - (viewport_u.z() / 2) - (viewport_v.z() / 2),
+        camera_center.x() + updated_focal_vector.x(),
+        camera_center.y() + updated_focal_vector.y(),
+        camera_center.z() + updated_focal_vector.z(),
     } };
 }
 
-// pub const pixel_zero_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 fn calculate_pixel_zero_location(viewport_upper_left: *const vector, mult: f64, pixel_delta_u: *const vector, pixel_delta_v: *const vector) vector {
-    return vector{ .elements = .{
-        viewport_upper_left.x() + mult * (pixel_delta_u.x() + pixel_delta_v.x()),
-        viewport_upper_left.y() + mult * (pixel_delta_u.y() + pixel_delta_v.y()),
-        viewport_upper_left.z() + mult * (pixel_delta_u.z() + pixel_delta_v.z()),
-    } };
+    const scaled_pixel_delta_u = pixel_delta_u.scale_operation(mult);
+    const scaled_pixel_delta_v = pixel_delta_v.scale_operation(mult);
+    const scaled_pixel_deltas_combined = scaled_pixel_delta_u.addition_operation(&scaled_pixel_delta_v);
+    return viewport_upper_left.addition_operation(&scaled_pixel_deltas_combined);
 }

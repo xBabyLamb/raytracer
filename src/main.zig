@@ -5,19 +5,25 @@ const raytracer_config = @import("structures.zig").raytracer_config;
 const ray = @import("structures.zig").ray;
 const point = @import("structures.zig").point;
 
-//FIXME:add better way to handle this 2 operations
 fn calculate_pixel_center(pixel_zero_location: *const vector, height: i32, width: i32, pixel_delta_u: *const vector, pixel_delta_v: *const vector) point {
+    const height_f: f64 = @floatFromInt(height);
+    const width_f: f64 = @floatFromInt(width);
+    const scaled_pixel_delta_u = pixel_delta_u.scale_operation(width_f);
+    const scaled_pixel_delta_v = pixel_delta_v.scale_operation(height_f);
+
+    const pixel_center = pixel_zero_location.addition_operation(&scaled_pixel_delta_u).addition_operation(&scaled_pixel_delta_v);
     return point{ .elements = .{
-        pixel_zero_location.x() + (width * pixel_delta_u.x()) + (height * pixel_delta_v.x()),
-        pixel_zero_location.y() + (width * pixel_delta_u.y()) + (height * pixel_delta_v.y()),
-        pixel_zero_location.z() + (width * pixel_delta_u.z()) + (height * pixel_delta_v.z()),
+        pixel_center.x(),
+        pixel_center.y(),
+        pixel_center.z(),
     } };
 }
 fn calculate_ray_direction(pixel_center: *const point, camera_center: *const point) vector {
+    const ray_direction = pixel_center.substraction_operation(camera_center);
     return vector{ .elements = .{
-        pixel_center.x() - camera_center.x(),
-        pixel_center.y() - camera_center.y(),
-        pixel_center.z() - camera_center.z(),
+        ray_direction.x(),
+        ray_direction.y(),
+        ray_direction.z(),
     } };
 }
 
