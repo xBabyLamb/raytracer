@@ -184,7 +184,20 @@ pub const ray = struct {
             self.origin.z() + scaled_direction.z(),
         } };
     }
+    pub fn hits_sphere(self: *const ray, center: *const point, radius: f64) bool {
+        const oc = vector{ .elements = .{
+            center.x() - self.origin.x(),
+            center.y() - self.origin.y(),
+            center.z() - self.origin.z(),
+        } };
+        const a = self.direction.dot_product_operation(&self.direction);
+        const b = -self.direction.dot_product_operation(&oc) * 2.0;
+        const c = oc.dot_product_operation(&oc) - (radius * radius);
+        const discriminant = b * b - 4 * a * c;
+        return (discriminant >= 0);
+    }
     pub fn calculate_ray_color(self: *const ray) color {
+        if (self.hits_sphere(&point{ .elements = .{ 0, 0, -1 } }, 0.5)) return color{ .elements = .{ 1, 0, 0 } };
         const unit_direction = self.direction.calculate_unit_vector();
         const a = 0.5 * (unit_direction.y() + 1.0);
 

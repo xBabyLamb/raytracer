@@ -49,5 +49,4 @@ pub fn main(init: std.process.Init) !void {
         }
     }
     std.debug.print("\rDone                            \n", .{});
-    std.debug.print("VAlue is {}\n", .{raytracer_config.image_height});
 }
