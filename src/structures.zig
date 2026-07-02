@@ -184,7 +184,8 @@ pub const ray = struct {
             self.origin.z() + scaled_direction.z(),
         } };
     }
-    pub fn hits_sphere(self: *const ray, center: *const point, radius: f64) bool {
+    pub fn hits_sphere(self: *const ray, center: *const point, radius: f64) f64 {
+        //FIXME:use better variable names
         const oc = vector{ .elements = .{
             center.x() - self.origin.x(),
             center.y() - self.origin.y(),
@@ -194,10 +195,29 @@ pub const ray = struct {
         const b = -self.direction.dot_product_operation(&oc) * 2.0;
         const c = oc.dot_product_operation(&oc) - (radius * radius);
         const discriminant = b * b - 4 * a * c;
-        return (discriminant >= 0);
+
+        if (discriminant < 0) return -1.0;
+        return (-b - @sqrt(discriminant)) / (2.0 * a);
     }
     pub fn calculate_ray_color(self: *const ray) color {
-        if (self.hits_sphere(&point{ .elements = .{ 0, 0, -1 } }, 0.5)) return color{ .elements = .{ 1, 0, 0 } };
+        //FIXME:use better variable names
+        const sphere_center = point{ .elements = .{ 0, 0, -1 } };
+        const sphere_radius = 0.5;
+        const t_value = self.hits_sphere(&sphere_center, sphere_radius);
+        if (t_value > 0.0) {
+            const point_at_t = self.point_at(t_value);
+            const normal_vector = vector{ .elements = .{
+                point_at_t.x(),
+                point_at_t.y(),
+                point_at_t.z() + 1,
+            } };
+            const normal_unit_vector = normal_vector.calculate_unit_vector();
+            return color{ .elements = .{
+                0.5 * (normal_unit_vector.x() + 1),
+                0.5 * (normal_unit_vector.y() + 1),
+                0.5 * (normal_unit_vector.z() + 1),
+            } };
+        }
         const unit_direction = self.direction.calculate_unit_vector();
         const a = 0.5 * (unit_direction.y() + 1.0);
 
